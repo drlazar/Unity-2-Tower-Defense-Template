@@ -30,7 +30,8 @@ public class TowerManager : MonoBehaviour
     {
         if (currentTarget != null)
         {
-            AttackTarget();
+            //AttackTarget();
+            anim.SetFloat("rangeToTarget", Vector3.Distance(this.transform.position, currentTarget.transform.position));
         }
         else
         {
@@ -72,6 +73,7 @@ public class TowerManager : MonoBehaviour
         {
             if (currentTarget != null)
             {
+                anim.SetFloat("rangeToTarget", Vector3.Distance(this.transform.position, currentTarget.transform.position));
                 anim.SetBool("hasTarget", true);
             }
             else
@@ -94,7 +96,7 @@ public class TowerManager : MonoBehaviour
         return rot;
     }
 
-    void AttackTarget()
+    public void AttackTarget()
     {
         Debug.DrawLine(this.transform.position, currentTarget.transform.position);
         if (readyToFire && GetDis() <= self.attackRange)
@@ -114,9 +116,31 @@ public class TowerManager : MonoBehaviour
 
     IEnumerator FireProjectile(Quaternion direction)
     {
-        GameObject shotProjectile = Instantiate(projectile, this.transform);
+        GameObject shotProjectile = CreateProjectile();
+        shotProjectile.GetComponent<ProjectileManager>().self = self.projectile;
+        shotProjectile.GetComponent<ProjectileManager>().target = currentTarget;
+        shotProjectile.transform.parent = this.transform.parent;
         readyToFire = false;
         yield return new WaitForSeconds(self.attackCooldown);
         readyToFire = true;
+    }
+
+    GameObject CreateProjectile()
+    {
+        GameObject projectile = new GameObject(self.projectile.name);
+        projectile.transform.parent = this.transform;
+        projectile.transform.position = this.transform.position;
+
+        projectile.AddComponent<SpriteRenderer>();
+        projectile.AddComponent<CircleCollider2D>();
+        projectile.AddComponent<ProjectileManager>();
+
+
+        projectile.GetComponent<SpriteRenderer>().sortingOrder = 100;
+        projectile.GetComponent<CircleCollider2D>().isTrigger = true;
+        projectile.GetComponent<ProjectileManager>().self = self.projectile;
+        projectile.GetComponent<ProjectileManager>().target = currentTarget;
+
+        return projectile;
     }
 }
